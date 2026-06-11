@@ -1,15 +1,14 @@
-# Criminal Management System
+# Citizen Safety Connect
 
-A Java Servlet + JSP web application for criminal records administration, legal section lookup, officers directory, reports, and user complaint filing/tracking.
+A Java Servlet + JSP web application focused on citizen-facing criminal information and complaint workflows.
 
-This repository uses a classic MVC style:
+This repository follows classic MVC:
 - Servlets handle routing and request processing.
 - DAO classes handle MySQL operations.
 - JSP pages render UI.
 
-## Project Status
+## Implemented Modules (User Side)
 
-### Implemented user-facing modules
 - Authentication and registration (`/Login`, `/SignUp`)
 - Criminal records browser (`/Criminals`)
 - Case types browser (`/CaseType`)
@@ -21,19 +20,6 @@ This repository uses a classic MVC style:
   - File complaint (`/FileComplaint`)
   - Track complaint (`/TrackComplaint`)
 - Logout (`/LogOut`)
-
-### Implemented admin modules
-- Admin login (`/AdminLogin`)
-- Admin home page (`AdminHome.jsp`)
-- Admin case type CRUD (`/AdminCaseType`)
-
-### Admin pages currently scaffolded/placeholder
-These JSP files exist but are currently empty placeholders:
-- `AdminCriminals.jsp`
-- `AdminLaws.jsp`
-- `AdminOfficers.jsp`
-- `AdminReport.jsp`
-- `AdminLogput.jsp`
 
 ## Tech Stack
 
@@ -53,9 +39,6 @@ Criminal_Management/
 |-- database.sql
 |-- schema_additions.sql
 |-- README.md
-|-- .vscode/
-|   |-- tasks.json
-|   `-- settings.json
 `-- Criminal Mangement/
     |-- build.xml
     |-- src/main/java/com/
@@ -67,9 +50,7 @@ Criminal_Management/
     |   |-- Laws/
     |   |-- Officer/
     |   |-- Reports/
-    |   |-- Complaint/
-    |   |-- AdminLogin/
-    |   `-- AdminCaseType/
+    |   `-- Complaint/
     `-- src/main/webapp/
         |-- Login.jsp
         |-- SignUp.jsp
@@ -81,15 +62,14 @@ Criminal_Management/
         |-- Laws.jsp
         |-- Officers.jsp
         |-- Reports.jsp
-        |-- Admin*.jsp
         `-- WEB-INF/
             |-- web.xml
             `-- lib/
 ```
 
-## Runtime and URL Configuration
+## Runtime URL
 
-- Tomcat deployment port in this repo is configured as `8081` in `.vscode/settings.json`.
+- Tomcat deployment port in this repo is configured as `8081`.
 - Default app URL:
 
 ```text
@@ -98,10 +78,10 @@ http://localhost:8081/criminal/Login.jsp
 
 ## Prerequisites
 
-- JDK 17+ (JDK 22 is used in current batch script paths)
+- JDK 17+
 - Apache Tomcat 10.1.x
 - MySQL 8.x
-- Optional: Apache Ant (for `ant war` build path)
+- Optional: Apache Ant
 
 ## Database Setup
 
@@ -118,21 +98,7 @@ USE management;
 mysql -u root -p management < database.sql
 ```
 
-`database.sql` seeds large datasets for:
-- `criminal`
-- `case_types`
-- `laws`
-- `officers`
-- `reports`
-- `user` (legacy table)
-
-### 3) Align schema with current code expectations (important)
-
-Current Java code expects additional tables not created by `database.sql`:
-- `users`
-- `admin`
-- `complaints`
-- Optional: `logout_logs` (only used if logout logging is enabled)
+### 3) Align schema with current code expectations
 
 Run this once after importing `database.sql`:
 
@@ -154,16 +120,6 @@ SELECT u.username, u.password, 18, CONCAT(u.username, '@local.test'), '000000000
 FROM `user` u
 LEFT JOIN users us ON us.username = u.username
 WHERE us.username IS NULL;
-
-CREATE TABLE IF NOT EXISTS admin (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL
-);
-
-INSERT INTO admin (username, password)
-SELECT 'admin', 'admin123'
-WHERE NOT EXISTS (SELECT 1 FROM admin WHERE username = 'admin');
 
 CREATE TABLE IF NOT EXISTS complaints (
     complaint_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -199,63 +155,27 @@ CREATE TABLE IF NOT EXISTS logout_logs (
 );
 ```
 
-Notes:
-- `schema_additions.sql` provides complaint setup guidance, but code currently relies on `users`, not `user`.
-- Logout logging is disabled by default in `LogOut.java` (`ENABLE_LOGOUT_LOGGING = false`).
-
-## Build and Deploy
-
-You have two supported workflows.
-
-### Workflow A: Ant build (standard WAR)
-
-Set `CATALINA_HOME` so Ant can resolve servlet libraries from Tomcat:
+## Build
 
 ```powershell
-$env:CATALINA_HOME = "C:\apache-tomcat-10.1.52"
-```
-
-```bash
 cd "Criminal Mangement"
 ant war
 ```
 
-WAR output:
+## Quick Deploy
 
-```text
-Criminal Mangement/dist/criminal.war
+```powershell
+set CATALINA_HOME=C:\apache-tomcat-10.1.52
+cd "Criminal Mangement"
+ant quick-deploy
 ```
 
-Then copy WAR to Tomcat `webapps` and start Tomcat.
+## Demo Login (No DB)
 
-### Workflow B: Batch scripts (works without Ant)
+- Username: `demo`
+- Password: `demo`
 
-From repository root:
-
-```bat
-compile.bat
-deploy.bat
-```
-
-What they do:
-- `compile.bat`
-  - Compiles Java classes into `Criminal Mangement/build/classes`.
-  - Uses Tomcat libs + `WEB-INF/lib` jars.
-- `deploy.bat`
-  - Stops Tomcat.
-  - Cleans existing `webapps/criminal` deployment.
-  - Removes stale accidental root copies from `webapps`.
-  - Copies JSP/resources + compiled classes into `webapps/criminal`.
-  - Starts Tomcat and opens login URL on port `8081`.
-
-## VS Code Tasks
-
-Configured in `.vscode/tasks.json`:
-- `Build Web App` -> `ant war`
-- `Clean Build` -> `ant clean`
-- `Quick Deploy JSP` -> copies JSP files directly into Tomcat app folder
-
-If `ant` is not installed, use `compile.bat` and `deploy.bat`.
+These demo credentials are provided by an in-memory fallback so beginners can explore the app without installing MySQL.
 
 ## Servlet Route Map
 
@@ -272,79 +192,12 @@ If `ant` is not installed, use `compile.bat` and `deploy.bat`.
 | `/UserDashboard` | User complaint dashboard data |
 | `/FileComplaint` | Create complaint (POST), complaint page redirect (GET) |
 | `/TrackComplaint` | Fetch complaint by ID for logged user |
-| `/AdminLogin` | Admin authentication |
-| `/AdminCaseType` | Admin case type list/search/add/update/delete |
-
-## Main User Flows
-
-### User flow
-1. Open `Login.jsp`.
-2. Authenticate via `/Login`.
-3. On success, redirected to `/UserDashboard`.
-4. Navigate to complaints, laws, reports, and records modules.
-
-### Complaint flow
-1. Open `FileComplaint.jsp` from dashboard.
-2. Submit to `/FileComplaint`.
-3. Return to `/UserDashboard?success=filed`.
-4. Track using `/TrackComplaint?complaint_id=...`.
-
-### Admin flow
-1. Open `AdminLogin.jsp`.
-2. Authenticate via `/AdminLogin`.
-3. Reach `AdminHome.jsp`.
-4. Use `/AdminCaseType` for case type CRUD.
-
-## Configuration Defaults in Code
-
-The project currently contains hardcoded local defaults:
-- DB URL: `jdbc:mysql://localhost:3306/management`
-- DB user: `root`
-- DB password: `Ayush@25`
-- Tomcat path in scripts: `C:\apache-tomcat-10.1.52`
-- Java home in deploy script: `C:\Program Files\Java\jdk-22`
-
-Update these for your machine before production or team use.
-
-## Troubleshooting
-
-### App opens old pages or stale UI
-- Hard refresh browser (`Ctrl+F5`) after deploy.
-- Ensure Tomcat deployed files under `webapps/criminal` only.
-- Run `deploy.bat` again to clean stale root files.
-
-### 404 on expected route
-- Confirm URL includes `/criminal` context.
-- Check Tomcat is listening on `8081`.
-- Verify servlet exists for that route.
-
-### Build task fails with "ant not recognized"
-- Install Ant and add to PATH, or
-- Use `compile.bat` + `deploy.bat`.
-
-### Login fails even with valid credentials
-- Ensure `users` table exists and has your user record.
-- Ensure `admin` table exists for admin login.
-
-### Complaint pages fail
-- Ensure `complaints` table exists.
-- If using foreign key to `users`, ensure the user exists in `users`.
 
 ## Known Limitations
 
-- Passwords are stored as plaintext.
-- Some admin modules are scaffolded only (empty JSP files).
+- Passwords are currently stored as plaintext.
 - Environment-specific paths are hardcoded in batch scripts.
 - Current setup is development-focused and not production hardened.
-
-## Security Recommendations Before Production
-
-- Hash passwords using BCrypt/Argon2.
-- Move DB credentials and secrets to environment variables.
-- Add CSRF protection and stronger input validation.
-- Enforce HTTPS.
-- Add centralized exception handling and structured logging.
-- Add authorization checks per role on every admin endpoint.
 
 ## License
 

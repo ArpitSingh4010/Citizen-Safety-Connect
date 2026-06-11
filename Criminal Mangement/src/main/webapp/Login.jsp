@@ -229,7 +229,6 @@ body {
                 <div class="signup-link">
                     Not Registered? <a href="${pageContext.request.contextPath}/SignUp.jsp">Register Here</a>
                 </div>
-
             </form>
         </div>
     </div>

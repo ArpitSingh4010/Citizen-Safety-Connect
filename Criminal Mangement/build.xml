@@ -56,4 +56,30 @@
         </war>
         <echo message="WAR file created: ${dist.dir}/${war.name}"/>
     </target>
+
+    <!-- Quick deploy to local Tomcat (exploded) -->
+    <target name="quick-deploy" depends="compile">
+        <echo message="Deploying exploded app to ${env.CATALINA_HOME}/webapps/criminal"/>
+        <delete dir="${env.CATALINA_HOME}/webapps/criminal" failonerror="false"/>
+        <mkdir dir="${env.CATALINA_HOME}/webapps/criminal/WEB-INF/classes"/>
+        <mkdir dir="${env.CATALINA_HOME}/webapps/criminal/WEB-INF/lib"/>
+
+        <!-- copy web resources (exclude web.xml which is handled separately) -->
+        <copy todir="${env.CATALINA_HOME}/webapps/criminal">
+            <fileset dir="${web.dir}">
+                <exclude name="WEB-INF/web.xml"/>
+            </fileset>
+        </copy>
+
+        <!-- copy compiled classes and libs -->
+        <copy todir="${env.CATALINA_HOME}/webapps/criminal/WEB-INF/classes">
+            <fileset dir="${classes.dir}"/>
+        </copy>
+        <copy todir="${env.CATALINA_HOME}/webapps/criminal/WEB-INF/lib" failonerror="false">
+            <fileset dir="${lib.dir}"/>
+        </copy>
+
+        <copy file="${web.dir}/WEB-INF/web.xml" todir="${env.CATALINA_HOME}/webapps/criminal/WEB-INF"/>
+        <echo message="Quick deploy complete."/>
+    </target>
 </project>
